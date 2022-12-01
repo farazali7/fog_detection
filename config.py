@@ -2,7 +2,7 @@ from torch import nn, optim
 from torchvision import transforms
 
 cfg = {
-    'EPOCHS': 30,
+    'EPOCHS': 15,
     'BATCH_SIZE': 16,
     'N_WINDOWS': 1,
     'SUBJECTS': [
@@ -69,23 +69,10 @@ cfg = {
     },
     'LOSS': nn.BCELoss,
     'OPTIMIZER': 'adam',
-    'LR': 0.3,
+    'LR': 0.001,
     'WEIGHT_DECAY': 0,
     'BETAS': [0.9, 0.999],
     'EPSILON': 1e-8,
     'MOMENTUM': 0.3,
-    'ROTATION_AUG': 10,
-    'SHEAR_AUG': 10,
-    'TRANSLATION_AUG': 0.2,
-    'CONTRAST_AUG': 0,
-    'FILTER_NUMS': [19, 38, 76, 152, 152, 152, 152],
-    'FILTER_SIZES': [5, 5, 5, 5, 5, 5, 5],
-    'STRIDES': [1, 1, 1, 1, 1, 1, 1],
-    'POOLINGS': [0, 0, 0, 0, 0, 0, 0],
-    'BATCH_NORM': [1, 1, 1, 1, 1, 1, 1],
-    'NUM_EPOCHS': 10,
-    'FC_SIZES': [40, 10],
-    'DROPOUT': [0, 0, 0, 0, 0, 0, 0],
-    'L2_REG': False,
-    'L1_REG': False
+    'DROPOUT': 0.1,
 }

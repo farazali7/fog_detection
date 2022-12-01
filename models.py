@@ -10,7 +10,7 @@ from config import cfg
 
 # Convolutional Transformer for FOG Detection
 class CT_FOG(nn.Module):
-    def __init__(self, in_channels, seq_len, dropout_rate=0.2):
+    def __init__(self, in_channels, seq_len, dropout_rate=cfg['DROPOUT']):
         '''
         Convolutional Transformer model
         :param in_channels: Int, number of input channels from features
@@ -81,7 +81,7 @@ class ConvolutionalBlock(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, seq_len, embed_dim, num_layers=3, n_heads=8, dropout_rate=0.2, expansion_factor=4):
+    def __init__(self, seq_len, embed_dim, num_layers=3, n_heads=8, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
         '''
         Transformer encoder block as presented in Vaswani et. al (2017)
         :param seq_len: Int, length of input sequence
@@ -108,7 +108,7 @@ class TransformerEncoder(nn.Module):
 
 
 class EncoderLayer(nn.Module):
-    def __init__(self, embed_dim, n_heads=8, dropout_rate=0.2, expansion_factor=4):
+    def __init__(self, embed_dim, n_heads=8, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
         '''
         Encoder layer using as Transformer Encoder.
         :param embed_dim: Int, Number of dimensions of input embedding
