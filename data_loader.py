@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+
 MODALITIES = {"EMG", "ECG", "ACC", "GYR", "NC/SC", "IO"}
 
 
@@ -127,15 +128,13 @@ class FOGDataset(Dataset):
         sample_rate=25,
         overlap=0.75,
         win_len=5.12,
-        n_windows=1,
-        transforms=None,
+        n_windows=1
     ):
 
         """
         save all data to one numpy file and access windows with memmap
         """
         self.n_windows = n_windows
-        self.transforms = transforms
         all_data = []
         for subject in subjects:
             subject_df = create_subject_df(
@@ -174,6 +173,8 @@ class FOGDataset(Dataset):
         self.num_timesteps = len(all_data)
         self.data = all_data
 
+        self.num_channels = all_data.shape[-1] - 1 # - 1 because 1 channel is for label
+
         # load all samples from file
         self.win_step = int((1 - overlap) * self.win_len)
         self.num_samples = int(
@@ -196,10 +197,9 @@ class FOGDataset(Dataset):
         fog = windows[0, :, -1]  # only consider labels of latest window
         y = 1 if np.mean(fog) > 0.5 else 0
 
-        if self.transforms is not None:
-            windows = self.transforms(windows)
+        windows = torch.tensor(windows, dtype=torch.float32)
 
-        return {"x": windows[..., :-1], "y": y}
+        return windows[..., :-1], y
 
 
 if __name__ == "__main__":

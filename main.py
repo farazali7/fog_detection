@@ -25,33 +25,30 @@ def main():
     # data downloaded from https://data.mendeley.com/datasets/r8gmbtv7w2/3 should be in this dir
     # ie there should be a 'data/Filtered Data' folder
     data_dir = "data"
-    train_subjects, val_subjects, test_subjects = train_val_test_split(cfg['SUBJECTS'])
+    train_subjects, val_subjects, test_subjects = train_val_test_split(cfg['SUBJECTS'], train=2)
 
     train_ds = FOGDataset(
         data_dir=data_dir,
         subjects=train_subjects,
         modalities=cfg['MODALITIES'],  # specify which we want from data_loader.MODALITIES
-        n_windows=1,
-        transforms=transforms.ToTensor,
+        n_windows=cfg['N_WINDOWS']
     )
 
     val_ds = FOGDataset(
         data_dir=data_dir,
         subjects=val_subjects,
         modalities=cfg['MODALITIES'],  # specify which we want from data_loader.MODALITIES
-        n_windows=1,
-        transforms=transforms.ToTensor,
+        n_windows=cfg['N_WINDOWS']
     )
 
     test_ds = FOGDataset(
         data_dir=data_dir,
         subjects=test_subjects,
         modalities=cfg['MODALITIES'],  # specify which we want from data_loader.MODALITIES
-        n_windows=1,
-        transforms=transforms.ToTensor,
+        n_windows=cfg['N_WINDOWS']
     )
 
-    model = CT_FOG(in_channels=len(cfg['MODALITIES']), seq_len=train_ds.win_len)
+    model = CT_FOG(in_channels=train_ds.num_channels, seq_len=train_ds.n_windows)
 
     #Added for GPU support 
     if torch.cuda.is_available():
@@ -69,14 +66,15 @@ def main():
 
     train_loader = DataLoader(train_ds, batch_size=cfg['BATCH_SIZE'], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=cfg['BATCH_SIZE'], shuffle=True)
+
     losses = []
-    for epoch in tqdm(range(cfg['EPOCHS'])):
+    for epoch in range(cfg['EPOCHS']):
         model.train()
         num_correct = 0
         for batch_i, batch in enumerate(train_loader):
             batch_x, batch_y = batch
-            print(batch_x.shape)  # (batch_size, n_windows, window_length, num_modalities)
-            print(batch_y)  # 0 or 1
+            # print(batch_x.shape)  # (batch_size, n_windows, window_length, num_modalities)
+            # print(batch_y)  # 0 or 1
 
             if torch.cuda.is_available():
                 batch_x = batch_x.to(torch.device("cuda:0"))
@@ -84,10 +82,12 @@ def main():
 
             output = model(batch_x)
 
-            batch_loss = loss(output, batch_y) # do we neeed y.long()?
+            batch_loss = loss(output, batch_y.float())
 
-            preds = np.argmax(output.detach().numpy(), axis=-1)
-            num_correct += np.sum(preds == batch_y)
+            preds = output.detach().numpy()
+            preds[preds >= 0.5] = 1
+            preds[preds < 0.5] = 0
+            num_correct += np.sum(preds == np.array(batch_y))
 
             if torch.cuda.is_available():
                 batch_loss = batch_loss.to(torch.device("cpu"))
@@ -113,8 +113,10 @@ def main():
                 else:
                     output = model(batch_x)
 
-                preds = np.argmax(output.detach().numpy(), axis=-1)
-                num_correct += np.sum(preds == batch_y)
+                preds = output.detach().numpy()
+                preds[preds >= 0.5] = 1
+                preds[preds < 0.5] = 0
+                num_correct += np.sum(preds == np.array(batch_y))
         print("val acc: ", num_correct / val_ds.num_samples)
 
 if __name__ == "__main__":

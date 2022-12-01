@@ -5,6 +5,7 @@ import torch.optim as optim
 import torchvision
 import matplotlib.pyplot as plt
 import math
+from config import cfg
 
 
 # Convolutional Transformer for FOG Detection
@@ -30,14 +31,20 @@ class CT_FOG(nn.Module):
                                  nn.ReLU(),
                                  nn.Dropout(dropout_rate),
                                  nn.Linear(40, 1),
-                                 nn.Sigmoid(),
+                                 nn.Sigmoid()
                                  )
 
     def forward(self, x):
+        # reshaping to apply 1D conv for each timestep using 2D conv
+        x = torch.swapaxes(x, -3, -1)
         conv_out = self.conv_block(x)
+        conv_out = torch.swapaxes(conv_out, -3, -1)
+        conv_out = conv_out.squeeze(dim=2)
         transformer_out = self.transformer_enc(conv_out)
         gap_out = self.global_avg_pool(transformer_out)
+        gap_out = gap_out.squeeze(dim=-1)
         mlp_out = self.mlp(gap_out)
+        mlp_out = mlp_out.squeeze()
 
         return mlp_out
 
@@ -50,15 +57,15 @@ class ConvolutionalBlock(nn.Module):
         :param seq_len: Int, length of input sequence
         '''
         super(ConvolutionalBlock, self).__init__()
-        self.conv1 = nn.Conv1d(in_channels=in_channels, out_channels=128,
-                               kernel_size=4)
-        self.max_pool1 = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(in_channels=128, out_channels=64,
-                               kernel_size=4)
-        self.max_pool2 = nn.MaxPool1d(kernel_size=2)
-        self.conv3 = nn.Conv1d(in_channels=64, out_channels=32,
-                               kernel_size=4)
-        self.global_avg_pool = nn.AvgPool1d(kernel_size=32)  # Global avg pooling
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=128,
+                               kernel_size=(4, 1))
+        self.max_pool1 = nn.MaxPool2d(kernel_size=(2, 1))
+        self.conv2 = nn.Conv2d(in_channels=128, out_channels=64,
+                               kernel_size=(4, 1))
+        self.max_pool2 = nn.MaxPool2d(kernel_size=(2, 1))
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=32,
+                               kernel_size=(4, 1))
+        self.global_avg_pool = nn.AdaptiveAvgPool2d(output_size=(1, cfg['N_WINDOWS']))  # Global avg pooling
 
     def forward(self, x):
         x = self.conv1(x)
