@@ -3,10 +3,59 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
+from config import cfg
 
 
 MODALITIES = {"EMG", "ECG", "ACC", "GYR", "NC/SC", "IO"}
 
+# not used for now but could be useful later
+MODALITIES_DETAILED = {
+            "EMG": [
+                "EMG-LTA",
+                "EMG-RTA",
+                "EMG-RGS"
+                ],
+            "ECG": [
+                "ECG"
+            ],
+            "ACC": [
+                "A-ACCX",
+                "A-ACCY",
+                "A-ACCZ",
+                "LS-ACCX",
+                "LS-ACCY",
+                "LS-ACCZ",
+                "RS-ACCX",
+                "RS-ACCY",
+                "RS-ACCZ",
+                "W-ACCX",
+                "W-ACCY",
+                "W-ACCZ",
+            ],
+            "GYR": [
+                "A-GYRX",
+                "A-GYRY",
+                "A-GYRZ",
+                "LS-GYRX",
+                "LS-GYRY",
+                "LS-GYRZ",
+                "RS-GYRX",
+                "RS-GYRY",
+                "RS-GYRZ",
+                "W-GYRX",
+                "W-GYRY",
+                "W-GYRZ", 
+            ],
+            "NC/SC": [
+                "A-NC/SC",
+                "LS-NC/SC",
+                "RS-NC/SC",
+                "W-NC/SC",
+            ],
+            "IO": [
+                "IO"
+            ],
+    }
 
 def perform_col_swap(df, cols):
     """
@@ -122,54 +171,26 @@ def create_subject_df(data_path, subject_num_str):
 class FOGDataset(Dataset):
     def __init__(
         self,
-        data_dir,
         subjects,
-        modalities=MODALITIES,
-        sample_rate=25,
-        overlap=0.75,
-        win_len=5.12,
-        n_windows=1
+        data_dict,
+        overlap=cfg['OVERLAP'],
+        n_windows=cfg['N_WINDOWS'],
+        sample_rate=cfg['SAMPLE_RATE'],
+        win_len=cfg['WIN_LENGTH']
     ):
 
         """
         save all data to one numpy file and access windows with memmap
         """
         self.n_windows = n_windows
+        self.win_len = int(win_len * sample_rate)
+
         all_data = []
         for subject in subjects:
-            subject_df = create_subject_df(
-                os.path.join(data_dir, "Filtered Data"), subject
-            )
-            # drop unneeded
-            subject_df = subject_df.drop(
-                ["Index", "Time", "Subject", "Task", "Time"], axis=1
-            )
-            for mode in MODALITIES:
-                if mode not in modalities:
-                    cols_to_drop = [col for col in subject_df.columns if mode in col]
-                    subject_df = subject_df.drop(cols_to_drop, axis=1)
-
-            # TODO: putting signal filtering here
-
-            # downsample to sample_rate
-            sample_period = int(500 / sample_rate)
-            subject_df = subject_df.iloc[::sample_period]
-            # pad rows to subject data so that we don't have overlapping windows between subjects
-            # need at least a windows worth of dummy rows
-            self.win_len = int(win_len * sample_rate)
-            subject_df = subject_df.append(
-                pd.DataFrame(
-                    [[0] * subject_df.shape[1]] * self.win_len,
-                    columns=subject_df.columns,
-                )
-            )
-            self.columns = subject_df.columns.tolist()
-
-            # TODO: if we want to use different numbers of features for different modalities need to refactor this
-            all_data.append(subject_df.to_numpy())
-
+            all_data.append(data_dict[subject])
+        
         all_data = np.concatenate(all_data)
-
+        
         self.num_timesteps = len(all_data)
         self.data = all_data
 
@@ -200,6 +221,42 @@ class FOGDataset(Dataset):
         windows = torch.tensor(windows, dtype=torch.float32)
 
         return windows[..., :-1], y
+
+
+def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=cfg['SAMPLE_RATE'], win_len=cfg['WIN_LENGTH']):
+    all_data = {}
+    win_len = int(win_len * sample_rate)
+    for subject in subjects:
+        subject_df = create_subject_df(
+            os.path.join(data_dir, "Filtered Data"), subject
+        )
+        # drop unneeded
+        subject_df = subject_df.drop(
+            ["Index", "Time", "Subject", "Task", "Time"], axis=1
+        )
+        for mode in MODALITIES:
+            if mode not in modalities:
+                cols_to_drop = [col for col in subject_df.columns if mode in col]
+                subject_df = subject_df.drop(cols_to_drop, axis=1)
+
+        # TODO: putting signal filtering here
+
+        # downsample to sample_rate
+        sample_period = int(500 / sample_rate)
+        subject_df = subject_df.iloc[::sample_period]
+        # pad rows to subject data so that we don't have overlapping windows between subjects
+        # need at least a windows worth of dummy rows
+        
+        subject_df = subject_df.append(
+            pd.DataFrame(
+                [[0] * subject_df.shape[1]] * win_len,
+                columns=subject_df.columns,
+            )
+        )
+
+        all_data[subject] = subject_df.to_numpy()
+
+    return all_data
 
 
 if __name__ == "__main__":

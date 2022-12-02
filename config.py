@@ -8,6 +8,9 @@ cfg = {
     'N_HEADS': 8,
     'N_ENC_LAYERS': 3,
     'N_MAX_CONV_FILTERS': 128,
+    'WIN_LENGTH': 5.12,
+    'OVERLAP': 0.75,
+    'SAMPLE_RATE': 25,
     'SUBJECTS': [
             "001",
             "002",
@@ -22,54 +25,14 @@ cfg = {
             "011",
             "012"
         ],
-    'MODALITIES': {
-            "EMG": [
-                "EMG-LTA",
-                "EMG-RTA",
-                "EMG-RGS"
-                ],
-            "ECG": [
-                "ECG"
-            ],
-            "ACC": [
-                "A-ACCX",
-                "A-ACCY",
-                "A-ACCZ",
-                "LS-ACCX",
-                "LS-ACCY",
-                "LS-ACCZ",
-                "RS-ACCX",
-                "RS-ACCY",
-                "RS-ACCZ",
-                "W-ACCX",
-                "W-ACCY",
-                "W-ACCZ",
-            ],
-            "GYR": [
-                "A-GYRX",
-                "A-GYRY",
-                "A-GYRZ",
-                "LS-GYRX",
-                "LS-GYRY",
-                "LS-GYRZ",
-                "RS-GYRX",
-                "RS-GYRY",
-                "RS-GYRZ",
-                "W-GYRX",
-                "W-GYRY",
-                "W-GYRZ",
-                
-            ],
-            "NC/SC": [
-                "A-NC/SC",
-                "LS-NC/SC",
-                "RS-NC/SC",
-                "W-NC/SC",
-            ],
-            "IO": [
-                "IO"
-            ],
-    },
+    'MODALITIES': [
+            "EMG",
+            "ECG",
+            "ACC", 
+            "GYR", 
+            "NC/SC", 
+            "IO"
+        ],
     'LOSS': nn.BCELoss,
     'OPTIMIZER': 'adam',
     'LR': 0.0001,
