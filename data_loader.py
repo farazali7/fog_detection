@@ -244,9 +244,12 @@ def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=c
         # downsample to sample_rate
         sample_period = int(500 / sample_rate)
         subject_df = subject_df.iloc[::sample_period]
+
+        # normalize data
+        subject_df = (subject_df-subject_df.min())/(subject_df.max()-subject_df.min())
+
         # pad rows to subject data so that we don't have overlapping windows between subjects
         # need at least a windows worth of dummy rows
-        
         subject_df = subject_df.append(
             pd.DataFrame(
                 [[0] * subject_df.shape[1]] * win_len,
