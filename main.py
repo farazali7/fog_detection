@@ -57,6 +57,10 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
 
     val_accs = []
     train_accs = []
+
+    # for early stopping
+    max_val_acc = 0
+    epochs_without_improvement = 0
     
     # train epochs
     for epoch in range(cfg['EPOCHS']):
@@ -116,6 +120,17 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
         epoch_val_acc = num_correct / val_ds.num_samples
         print("val acc: ", epoch_val_acc)
         val_accs.append(epoch_val_acc)
+
+        # check for early stopping
+        if epoch_val_acc > max_val_acc:
+            max_val_acc = epoch_val_acc
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+        
+        if epochs_without_improvement >= cfg['EARLY_STOPPING']:
+            break
+
 
     # get best epoch with max val accuracy
     best_epoch = np.argmax(val_accs)

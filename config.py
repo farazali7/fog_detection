@@ -41,4 +41,5 @@ cfg = {
     'EPSILON': 1e-8,
     'MOMENTUM': 0.1,
     'DROPOUT': 0.1,
+    'EARLY_STOPPING': 7
 }
