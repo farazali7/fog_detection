@@ -37,10 +37,10 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
     model = CT_FOG(
         in_channels=train_ds.num_channels, 
         seq_len=train_ds.n_windows, 
-        num_heads=num_head, 
-        num_enc_layers=num_ec_layers, 
+        n_heads=num_head, 
+        n_enc_layers=num_ec_layers, 
         max_conv_filters=num_filters
-        )
+    )
 
     #Added for GPU support 
     if torch.cuda.is_available():
@@ -55,7 +55,7 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
             betas=cfg['BETAS'],
             eps=cfg['EPSILON'],
             weight_decay=cfg['WEIGHT_DECAY']
-        )
+    )
 
     # data loaders
     train_loader = DataLoader(train_ds, batch_size=cfg['BATCH_SIZE'], shuffle=True, drop_last=True)
@@ -207,7 +207,17 @@ def main():
     # data downloaded from https://data.mendeley.com/datasets/r8gmbtv7w2/3 should be in this dir
     # ie there should be a 'data/Filtered Data' folder
     
-    train_acc, val_acc = train_loso(subjects=cfg['SUBJECTS'], modalities=cfg['MODALITIES'], sample_rate=cfg['SAMPLE_RATE'], win_len=cfg['WIN_LENGTH'], overlap=cfg['OVERLAP'], n_windows=cfg['N_WINDOWS'], num_head=cfg['N_HEADS'], num_ec_layers=cfg['N_ENC_LAYERS'], num_filters=cfg['N_MAX_CONV_FILTERS'])
+    train_acc, val_acc = train_loso(
+        subjects=cfg['SUBJECTS'], 
+        modalities=cfg['MODALITIES'], 
+        sample_rate=cfg['SAMPLE_RATE'], 
+        win_len=cfg['WIN_LENGTH'], 
+        overlap=cfg['OVERLAP'], 
+        n_windows=cfg['N_WINDOWS'], 
+        num_head=cfg['N_HEADS'], 
+        num_ec_layers=cfg['N_ENC_LAYERS'], 
+        num_filters=cfg['N_MAX_CONV_FILTERS']
+    )
     print("mean train acc: ", train_acc)
     print("mean val acc", val_acc)
 

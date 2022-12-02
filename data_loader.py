@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from config import cfg
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
