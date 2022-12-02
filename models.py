@@ -10,7 +10,8 @@ from config import cfg
 
 # Convolutional Transformer for FOG Detection
 class CT_FOG(nn.Module):
-    def __init__(self, in_channels, seq_len, dropout_rate=cfg['DROPOUT']):
+    def __init__(self, in_channels, seq_len, dropout_rate=cfg['DROPOUT'], n_heads=cfg['N_HEADS'],
+                 n_enc_layers=cfg['N_ENC_LAYERS'], max_conv_filters=cfg['N_MAX_CONV_FILTERS']):
         '''
         Convolutional Transformer model
         :param in_channels: Int, number of input channels from features
@@ -19,11 +20,11 @@ class CT_FOG(nn.Module):
         '''
         super(CT_FOG, self).__init__()
         # TODO: Either sequentially pass time step input or increase first dim size?
-        self.conv_block = ConvolutionalBlock(in_channels)
+        self.conv_block = ConvolutionalBlock(in_channels, max_conv_filters)
         # self.transformer_enc = TransformerEncoder(seq_len=seq_len, embed_dim=32)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=32, nhead=8)
-        self.transformer_enc = nn.TransformerEncoder(encoder_layer, num_layers=3)
-        self.global_avg_pool = nn.AvgPool1d(kernel_size=32)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=max_conv_filters//4, nhead=n_heads)
+        self.transformer_enc = nn.TransformerEncoder(encoder_layer, num_layers=n_enc_layers)
+        self.global_avg_pool = nn.AvgPool1d(kernel_size=max_conv_filters//4)
 
         # MLP Head TODO: Maybe set different dropout rate here than rest of network
         self.mlp = nn.Sequential(nn.Linear(seq_len, 80),
@@ -52,20 +53,20 @@ class CT_FOG(nn.Module):
 
 
 class ConvolutionalBlock(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, max_conv_filters):
         '''
         Convolutional block containing 1D convolutional layers to extract embeddings
         :param in_channels: Int, number of input channels from features
         :param seq_len: Int, length of input sequence
         '''
         super(ConvolutionalBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=128,
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=max_conv_filters,
                                kernel_size=(4, 1))
         self.max_pool1 = nn.MaxPool2d(kernel_size=(2, 1))
-        self.conv2 = nn.Conv2d(in_channels=128, out_channels=64,
+        self.conv2 = nn.Conv2d(in_channels=max_conv_filters, out_channels=max_conv_filters//2,
                                kernel_size=(4, 1))
         self.max_pool2 = nn.MaxPool2d(kernel_size=(2, 1))
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=32,
+        self.conv3 = nn.Conv2d(in_channels=max_conv_filters//2, out_channels=max_conv_filters//4,
                                kernel_size=(4, 1))
         self.global_avg_pool = nn.AdaptiveAvgPool2d(output_size=(1, cfg['N_WINDOWS']))  # Global avg pooling
 

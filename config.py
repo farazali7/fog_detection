@@ -5,6 +5,9 @@ cfg = {
     'EPOCHS': 15,
     'BATCH_SIZE': 16,
     'N_WINDOWS': 1,
+    'N_HEADS': 8,
+    'N_ENC_LAYERS': 3,
+    'N_MAX_CONV_FILTERS': 128,
     'SUBJECTS': [
             "001",
             "002",
