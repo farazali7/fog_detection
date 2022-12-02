@@ -20,7 +20,9 @@ class CT_FOG(nn.Module):
         super(CT_FOG, self).__init__()
         # TODO: Either sequentially pass time step input or increase first dim size?
         self.conv_block = ConvolutionalBlock(in_channels)
-        self.transformer_enc = TransformerEncoder(seq_len=seq_len, embed_dim=32)
+        # self.transformer_enc = TransformerEncoder(seq_len=seq_len, embed_dim=32)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=32, nhead=8)
+        self.transformer_enc = nn.TransformerEncoder(encoder_layer, num_layers=3)
         self.global_avg_pool = nn.AvgPool1d(kernel_size=32)
 
         # MLP Head TODO: Maybe set different dropout rate here than rest of network
@@ -81,7 +83,7 @@ class ConvolutionalBlock(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, seq_len, embed_dim, num_layers=3, n_heads=8, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
+    def __init__(self, seq_len, embed_dim, num_layers=3, n_heads=3, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
         '''
         Transformer encoder block as presented in Vaswani et. al (2017)
         :param seq_len: Int, length of input sequence
@@ -100,7 +102,8 @@ class TransformerEncoder(nn.Module):
                                      for _ in range(num_layers)])
 
     def forward(self, x):
-        out = self.positional_encoder(x)
+        # out = self.positional_encoder(x)
+        out = x
         for layer in self.layers:
             out = layer(out, out, out)  # self-attention only
 
@@ -108,7 +111,7 @@ class TransformerEncoder(nn.Module):
 
 
 class EncoderLayer(nn.Module):
-    def __init__(self, embed_dim, n_heads=8, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
+    def __init__(self, embed_dim, n_heads=3, dropout_rate=cfg['DROPOUT'], expansion_factor=4):
         '''
         Encoder layer using as Transformer Encoder.
         :param embed_dim: Int, Number of dimensions of input embedding
@@ -144,7 +147,7 @@ class EncoderLayer(nn.Module):
 
 
 class MultiheadAttention(nn.Module):
-    def __init__(self, embed_dim, n_heads=8):
+    def __init__(self, embed_dim, n_heads=3):
         '''
         Multi-head attention layer for use in Transformer models.
         :param embed_dim: Int, number of dimensions in input embedding
