@@ -3,15 +3,17 @@
 from data_loader import FOGDataset
 from models import CT_FOG
 import torch
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from config import cfg
 from tqdm import tqdm
+import random
 from random import sample
 import numpy as np
 
 def train_val_test_split(subjects, train=10, val=1, test=1):
+    random.seed(10)
     # split subjects into train/val/test
     train_subjects = sample(subjects, train)
     subjects = set(subjects) - set(train_subjects)
@@ -84,19 +86,20 @@ def main():
 
             batch_loss = loss(output, batch_y.float())
 
-            preds = output.detach().numpy()
-            preds[preds >= 0.5] = 1
-            preds[preds < 0.5] = 0
-            num_correct += np.sum(preds == np.array(batch_y))
-
             if torch.cuda.is_available():
                 batch_loss = batch_loss.to(torch.device("cpu"))
             
             losses.append(batch_loss.detach().numpy())
 
             batch_loss.backward()
-            optimizer.zero_grad()
             optimizer.step()
+            optimizer.zero_grad()
+
+            preds = output.detach().numpy()
+            preds[preds >= 0.5] = 1
+            preds[preds < 0.5] = 0
+            num_correct += np.sum(preds == np.array(batch_y))
+
         
         print("train acc: ", num_correct / train_ds.num_samples)
 

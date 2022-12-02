@@ -20,14 +20,14 @@ cfg = {
             "012"
         ],
     'MODALITIES': {
-            # "EMG": [
-            #     "EMG-LTA",
-            #     "EMG-RTA",
-            #     "EMG-RGS"
-            #     ],
-            # "ECG": [
-            #     "ECG"
-            # ],
+            "EMG": [
+                "EMG-LTA",
+                "EMG-RTA",
+                "EMG-RGS"
+                ],
+            "ECG": [
+                "ECG"
+            ],
             "ACC": [
                 "A-ACCX",
                 "A-ACCY",
@@ -42,37 +42,37 @@ cfg = {
                 "W-ACCY",
                 "W-ACCZ",
             ],
-            # "GYR": [
-            #     "A-GYRX",
-            #     "A-GYRY",
-            #     "A-GYRZ",
-            #     "LS-GYRX",
-            #     "LS-GYRY",
-            #     "LS-GYRZ",
-            #     "RS-GYRX",
-            #     "RS-GYRY",
-            #     "RS-GYRZ",
-            #     "W-GYRX",
-            #     "W-GYRY",
-            #     "W-GYRZ",
+            "GYR": [
+                "A-GYRX",
+                "A-GYRY",
+                "A-GYRZ",
+                "LS-GYRX",
+                "LS-GYRY",
+                "LS-GYRZ",
+                "RS-GYRX",
+                "RS-GYRY",
+                "RS-GYRZ",
+                "W-GYRX",
+                "W-GYRY",
+                "W-GYRZ",
                 
-            # ],
-            # "NC/SC": [
-            #     "A-NC/SC",
-            #     "LS-NC/SC",
-            #     "RS-NC/SC",
-            #     "W-NC/SC",
-            # ],
-            # "IO": [
-            #     "IO"
-            # ],
+            ],
+            "NC/SC": [
+                "A-NC/SC",
+                "LS-NC/SC",
+                "RS-NC/SC",
+                "W-NC/SC",
+            ],
+            "IO": [
+                "IO"
+            ],
     },
     'LOSS': nn.BCELoss,
     'OPTIMIZER': 'adam',
-    'LR': 0.001,
+    'LR': 0.0001,
     'WEIGHT_DECAY': 0,
     'BETAS': [0.9, 0.999],
     'EPSILON': 1e-8,
-    'MOMENTUM': 0.3,
+    'MOMENTUM': 0.1,
     'DROPOUT': 0.1,
 }
