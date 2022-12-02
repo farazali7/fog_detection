@@ -265,7 +265,7 @@ def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=c
 
 
 if __name__ == "__main__":
-    data_path = "fog_detection/data/"
+    data_path = "/content/drive/MyDrive/SYDE 599 Project/data/"
 
     fog_ds = FOGDataset(
         data_dir=data_path,
