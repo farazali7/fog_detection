@@ -11,25 +11,25 @@ def objective(trial):
     #number of modalities (5 different modalities)
     modalities_list = []
 
-    EMG = trial.suggest_float('EMG', 0, 1)
+    EMG = trial.suggest_int('EMG', 0, 1)
     # if EMG == 1:
     #     modalities_list.append("EMG")
     modalities_list.append("EMG")
     
-    ECG = trial.suggest_float('ECG', 0, 1)
+    ECG = trial.suggest_int('ECG', 0, 1)
     # if ECG == 1:
     #    modalities_list.append("ECG")
     modalities_list.append("ECG")
 
-    ACC = trial.suggest_float('ACC', 0, 1)
+    ACC = trial.suggest_int('ACC', 0, 1)
     if ACC == 1:
         modalities_list.append("ACC")
 
-    GYR = trial.suggest_float('GYR', 0, 1)
+    GYR = trial.suggest_int('GYR', 0, 1)
     if GYR == 1:
         modalities_list.append("GYR")
 
-    NC_SC = trial.suggest_float('NC/SC', 0, 1)
+    NC_SC = trial.suggest_int('NC/SC', 0, 1)
     if NC_SC == 1:
         modalities_list.append("NC/SC")
     
