@@ -141,7 +141,10 @@ def train_loso(subjects, data_dir="data"):
         )
 
         # run training for current subs
-        run_train_acc, run_val_acc = run_training(train_ds, val_ds)
+        try:
+            run_train_acc, run_val_acc = run_training(train_ds, val_ds)
+        except:
+            continue
 
         print("Run {0} done!".format(i + 1))
         print("Best epoch train acc: ", run_train_acc)
