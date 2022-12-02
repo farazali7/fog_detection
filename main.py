@@ -143,7 +143,8 @@ def train_loso(subjects, data_dir="data"):
         # run training for current subs
         try:
             run_train_acc, run_val_acc = run_training(train_ds, val_ds)
-        except:
+        except Exception as e:
+            print(e)
             continue
 
         print("Run {0} done!".format(i + 1))

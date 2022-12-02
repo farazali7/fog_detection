@@ -247,6 +247,7 @@ def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=c
 
         # normalize data
         subject_df = (subject_df-subject_df.min())/(subject_df.max()-subject_df.min())
+        subject_df = subject_df.fillna(0)
 
         # pad rows to subject data so that we don't have overlapping windows between subjects
         # need at least a windows worth of dummy rows
