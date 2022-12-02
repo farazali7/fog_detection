@@ -41,5 +41,6 @@ cfg = {
     'EPSILON': 1e-8,
     'MOMENTUM': 0.1,
     'DROPOUT': 0.1,
-    'EARLY_STOPPING': 7
+    'EARLY_STOPPING': 7,
+    'CROSS_VAL_FOLDS': 4
 }

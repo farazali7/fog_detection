@@ -137,6 +137,13 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
     return train_accs[best_epoch], val_accs[best_epoch]
 
 
+def split_subjects(subjects, n_folds=cfg['CROSS_VAL_FOLDS']):
+    """Split Subjects Into N Folds"""
+    n = len(subjects) // n_folds
+    for i in range(0, len(subjects), n):
+        yield subjects[i: i + n]
+
+
 def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, data_dir="data"):
     """Leave One Subject Out Cross Validation Experiment"""
     
@@ -144,11 +151,9 @@ def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, n
     
     all_val_acc = []
     all_train_acc = []
+    subject_folds = list(split_subjects(subjects))
 
-    for i, sub in enumerate(subjects):
-        # current subject is held out for validation
-        val_subs = [sub]
-
+    for i, val_subs in enumerate(subject_folds):
         # remianing subjects used for training
         train_subs = list(set(subjects) - set(val_subs))
 
