@@ -30,8 +30,7 @@ cfg = {
             "ECG",
             "ACC", 
             "GYR", 
-            "NC/SC", 
-            "IO"
+            "NC/SC"
         ],
     'LOSS': nn.BCELoss,
     'OPTIMIZER': 'adam',
