@@ -2,7 +2,7 @@ from torch import nn, optim
 from torchvision import transforms
 
 cfg = {
-    'EPOCHS': 15,
+    'EPOCHS': 25,
     'BATCH_SIZE': 16,
     'N_WINDOWS': 1,
     'N_HEADS': 8,

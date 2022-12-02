@@ -12,6 +12,14 @@ from tqdm import tqdm
 import random
 from random import sample
 import numpy as np
+import neptune.new as neptune
+
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
+# run = neptune.init(
+#     project="SYDE599",
+# 	api_token = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjZWUyZjYwYi1lZGE3LTQ2NGUtYTliOC03OWEzZTRlYjRiMDYifQ=="
+# )
 
 def train_val_test_split(subjects, train=10, val=1, test=1):
     random.seed(10)
@@ -24,7 +32,7 @@ def train_val_test_split(subjects, train=10, val=1, test=1):
     return train_subjects, val_subjects, test_subjects
 
 
-def run_training(train_ds, val_ds):
+def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
     """Train CT FOG Model"""
     model = CT_FOG(in_channels=train_ds.num_channels, seq_len=train_ds.n_windows)
 
@@ -114,10 +122,10 @@ def run_training(train_ds, val_ds):
     return train_accs[best_epoch], val_accs[best_epoch]
 
 
-def train_loso(subjects, data_dir="data"):
+def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, data_dir="data"):
     """Leave One Subject Out Cross Validation Experiment"""
     
-    data_dict = prepare_data(subjects, data_dir)
+    data_dict = prepare_data(subjects, data_dir, modalities, sample_rate, win_len)
     
     all_val_acc = []
     all_train_acc = []
@@ -131,18 +139,26 @@ def train_loso(subjects, data_dir="data"):
 
         # construct datasets
         train_ds = FOGDataset(
-            train_subs,
-            data_dict
+            subjects=train_subs,
+            data_dict=data_dict, 
+            overlap=overlap, 
+            n_windows=n_windows, 
+            sample_rate=sample_rate, 
+            win_len=win_len
         )
 
         val_ds = FOGDataset(
-            val_subs,
-            data_dict
+            subjects=val_subs,
+            data_dict=data_dict, 
+            overlap=overlap, 
+            n_windows=n_windows, 
+            sample_rate=sample_rate, 
+            win_len=win_len
         )
 
         # run training for current subs
         try:
-            run_train_acc, run_val_acc = run_training(train_ds, val_ds)
+            run_train_acc, run_val_acc = run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters)
         except Exception as e:
             print(e)
             continue
@@ -150,6 +166,9 @@ def train_loso(subjects, data_dir="data"):
         print("Run {0} done!".format(i + 1))
         print("Best epoch train acc: ", run_train_acc)
         print("Best epoch val acc: ", run_val_acc)
+        #log results
+        # run["train/accuracy"].log(run_train_acc)
+        # run["val/accuracy"].log(run_val_acc)
 
         # store results
         all_train_acc.append(run_train_acc)
@@ -162,7 +181,7 @@ def main():
     # data downloaded from https://data.mendeley.com/datasets/r8gmbtv7w2/3 should be in this dir
     # ie there should be a 'data/Filtered Data' folder
     
-    train_acc, val_acc = train_loso(cfg['SUBJECTS'])
+    train_acc, val_acc = train_loso(subjects=cfg['SUBJECTS'], modalities=cfg['MODALITIES'], sample_rate=cfg['SAMPLE_RATE'], win_len=cfg['WIN_LENGTH'], overlap=cfg['OVERLAP'], n_windows=cfg['N_WINDOWS'], num_head=cfg['N_HEADS'], num_ec_layers=cfg['N_ENC_LAYERS'], num_filters=cfg['N_MAX_CONV_FILTERS'])
     print("mean train acc: ", train_acc)
     print("mean val acc", val_acc)
 

@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from config import cfg
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 
 MODALITIES = {"EMG", "ECG", "ACC", "GYR", "NC/SC", "IO"}
