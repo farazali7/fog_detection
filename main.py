@@ -34,7 +34,13 @@ def train_val_test_split(subjects, train=10, val=1, test=1):
 
 def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
     """Train CT FOG Model"""
-    model = CT_FOG(in_channels=train_ds.num_channels, seq_len=train_ds.n_windows)
+    model = CT_FOG(
+        in_channels=train_ds.num_channels, 
+        seq_len=train_ds.n_windows, 
+        num_heads=num_head, 
+        num_enc_layers=num_ec_layers, 
+        max_conv_filters=num_filters
+        )
 
     #Added for GPU support 
     if torch.cuda.is_available():
