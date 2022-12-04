@@ -130,11 +130,5 @@ dmypy.json
 
 # Data
 data/
-.neptune/async/run__97e207d8-3d8a-4c64-948f-e678b2e9069f/exec-1669970500.132944-2022-12-02_03.41.40.132944/last_ack_version
-.neptune/async/run__97e207d8-3d8a-4c64-948f-e678b2e9069f/exec-1669970500.132944-2022-12-02_03.41.40.132944/last_put_version
-.neptune/async/run__97e2dcbc-586d-4d18-9458-2412c85b5c96/exec-1670006217.237428-2022-12-02_13.36.57.237428/last_ack_version
-.neptune/async/run__97e2dcbc-586d-4d18-9458-2412c85b5c96/exec-1670006217.237428-2022-12-02_13.36.57.237428/last_put_version
-.neptune/async/run__97e2e561-c489-49c4-86d1-ba8f5efdcaeb/exec-1670007667.822087-2022-12-02_14.01.07.822087/last_ack_version
-.neptune/async/run__97e2e561-c489-49c4-86d1-ba8f5efdcaeb/exec-1670007667.822087-2022-12-02_14.01.07.822087/last_put_version
-.neptune/async/run__97e2ea30-fde2-4396-b35e-2958ff6001f3/exec-1670008474.710338-2022-12-02_14.14.34.710338/last_ack_version
-.neptune/async/run__97e2ea30-fde2-4396-b35e-2958ff6001f3/exec-1670008474.710338-2022-12-02_14.14.34.710338/last_put_version
+.neptune/
+study.pkl
