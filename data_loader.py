@@ -224,7 +224,7 @@ class FOGDataset(Dataset):
         return windows[..., :-1], y
 
 
-def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=cfg['SAMPLE_RATE'], win_len=cfg['WIN_LENGTH']):
+def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], locations_drop=[], sample_rate=cfg['SAMPLE_RATE'], win_len=cfg['WIN_LENGTH']):
     all_data = {}
     win_len = int(win_len * sample_rate)
     for subject in subjects:
@@ -239,6 +239,10 @@ def prepare_data(subjects, data_dir, modalities=cfg['MODALITIES'], sample_rate=c
             if mode not in modalities:
                 cols_to_drop = [col for col in subject_df.columns if mode in col]
                 subject_df = subject_df.drop(cols_to_drop, axis=1)
+
+        for location in locations_drop:
+            cols_to_drop = [col for col in subject_df.columns if location in col]
+            subject_df = subject_df.drop(cols_to_drop, axis=1)
 
         # TODO: putting signal filtering here
 

@@ -41,5 +41,5 @@ cfg = {
     'MOMENTUM': 0.1,
     'DROPOUT': 0.1,
     'EARLY_STOPPING': 7,
-    'CROSS_VAL_FOLDS': 4
+    'CROSS_VAL_FOLDS': 3
 }

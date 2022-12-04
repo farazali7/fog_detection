@@ -13,6 +13,7 @@ import random
 from random import sample
 import numpy as np
 import neptune.new as neptune
+import sklearn.metrics
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
@@ -32,7 +33,7 @@ def train_val_test_split(subjects, train=10, val=1, test=1):
     return train_subjects, val_subjects, test_subjects
 
 
-def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
+def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
     """Train CT FOG Model"""
     model = CT_FOG(
         in_channels=train_ds.num_channels, 
@@ -63,9 +64,12 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
 
     val_accs = []
     train_accs = []
+    train_auc = []
+    val_auc = []
+    
 
     # for early stopping
-    max_val_acc = 0
+    max_val_auc = 0
     epochs_without_improvement = 0
     
     # train epochs
@@ -73,6 +77,10 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
         # set model up for training
         model.train()
         num_correct = 0
+        preds_list = []
+        batch_y_list = []
+        val_preds_list = []
+        val_batch_y_list = []
 
         # train on training batches
         for batch_i, batch in enumerate(train_loader):
@@ -97,10 +105,18 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
             preds[preds >= 0.5] = 1
             preds[preds < 0.5] = 0
             num_correct += np.sum(preds == np.array(batch_y))
-
+            batch_y_list += list(batch_y)
+            preds_list += list(preds)
+            
         epoch_train_acc = num_correct / train_ds.num_samples
+        train_auc_score = sklearn.metrics.roc_auc_score(batch_y_list, preds_list)
+        
         print("train acc: ", epoch_train_acc)
+        print("train roc: ", train_auc_score)
+        run["train/accuracy"].log(epoch_train_acc)
+        run["train/auc"].log(train_auc_score)
         train_accs.append(epoch_train_acc)
+        train_auc.append(train_auc_score)
 
         num_correct = 0
 
@@ -123,13 +139,21 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
                 preds[preds >= 0.5] = 1
                 preds[preds < 0.5] = 0
                 num_correct += np.sum(preds == np.array(batch_y))
+                val_batch_y_list += list(batch_y)
+                val_preds_list += list(preds)
+
         epoch_val_acc = num_correct / val_ds.num_samples
+        val_auc_score = sklearn.metrics.roc_auc_score(val_batch_y_list, val_preds_list)
         print("val acc: ", epoch_val_acc)
+        print("val auc: ", val_auc_score)
+        run["validation/auc"].log(epoch_val_acc)
+        run["validation/accuracy"].log(epoch_val_acc)
         val_accs.append(epoch_val_acc)
+        val_auc.append(val_auc_score)
 
         # check for early stopping
-        if epoch_val_acc > max_val_acc:
-            max_val_acc = epoch_val_acc
+        if val_auc_score > max_val_auc:
+            max_val_auc = val_auc_score
             epochs_without_improvement = 0
         else:
             epochs_without_improvement += 1
@@ -139,8 +163,8 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters ):
 
 
     # get best epoch with max val accuracy
-    best_epoch = np.argmax(val_accs)
-    return train_accs[best_epoch], val_accs[best_epoch]
+    best_epoch = np.argmax(val_auc)
+    return train_accs[best_epoch], val_accs[best_epoch], train_auc[best_epoch], val_auc[best_epoch]
 
 
 def split_subjects(subjects, n_folds=cfg['CROSS_VAL_FOLDS']):
@@ -150,13 +174,15 @@ def split_subjects(subjects, n_folds=cfg['CROSS_VAL_FOLDS']):
         yield subjects[i: i + n]
 
 
-def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, data_dir="data"):
+def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, locations_drop, run, data_dir="data"):
     """Leave One Subject Out Cross Validation Experiment"""
     
-    data_dict = prepare_data(subjects, data_dir, modalities, sample_rate, win_len)
+    data_dict = prepare_data(subjects, data_dir, modalities, locations_drop, sample_rate, win_len)
     
     all_val_acc = []
     all_train_acc = []
+    all_val_auc = []
+    all_train_auc = []
     subject_folds = list(split_subjects(subjects))
 
     for i, val_subs in enumerate(subject_folds):
@@ -184,23 +210,30 @@ def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, n
 
         # run training for current subs
         try:
-            run_train_acc, run_val_acc = run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters)
+            run_train_acc, run_val_acc, run_train_auc, run_val_auc = run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run)
+            print("Run {0} done!".format(i + 1))
+            print("Best epoch train acc: ", run_train_acc)
+            print("Best epoch val acc: ", run_val_acc)
+            print("Best epoch train auc: ", run_train_auc)
+            print("Best epoch val auc: ", run_val_auc)
+
+            # store results
+            all_train_acc.append(run_train_acc)
+            all_val_acc.append(run_val_acc)
+            all_train_auc.append(run_train_auc)
+            all_val_auc.append(run_val_auc)
+            
         except Exception as e:
             print(e)
+            all_train_acc.append(np.nan)
+            all_val_acc.append(np.nan)
+            all_train_auc.append(np.nan)
+            all_val_auc.append(np.nan)
             continue
 
-        print("Run {0} done!".format(i + 1))
-        print("Best epoch train acc: ", run_train_acc)
-        print("Best epoch val acc: ", run_val_acc)
-        #log results
-        # run["train/accuracy"].log(run_train_acc)
-        # run["val/accuracy"].log(run_val_acc)
+        
 
-        # store results
-        all_train_acc.append(run_train_acc)
-        all_val_acc.append(run_val_acc)
-
-    return np.mean(all_train_acc), np.mean(all_val_acc)
+    return np.nanmean(all_train_acc), np.nanmean(all_val_acc), np.nanmean(all_train_auc), np.nanmean(all_val_auc)
 
 
 def main():
