@@ -186,12 +186,13 @@ class FOGDataset(Dataset):
         self.n_windows = n_windows
         self.win_len = int(win_len * sample_rate)
 
-        all_data = []
-        for subject in subjects:
-            all_data.append(data_dict[subject])
+        # all_data = []
+        # for subject in subjects:
+        #     all_data.append(data_dict[subject])
         
-        all_data = np.concatenate(all_data)
-        
+        # all_data = np.concatenate(all_data)
+        all_data = np.load('data/all_data.npy')
+
         self.num_timesteps = len(all_data)
         self.data = all_data
 

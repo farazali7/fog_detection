@@ -102,19 +102,21 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
             optimizer.zero_grad()
 
             preds = output.detach().numpy()
+            batch_y_list += list(batch_y)
+            preds_list += list(preds)
             preds[preds >= 0.5] = 1
             preds[preds < 0.5] = 0
             num_correct += np.sum(preds == np.array(batch_y))
-            batch_y_list += list(batch_y)
-            preds_list += list(preds)
+            
             
         epoch_train_acc = num_correct / train_ds.num_samples
         train_auc_score = sklearn.metrics.roc_auc_score(batch_y_list, preds_list)
         
         print("train acc: ", epoch_train_acc)
         print("train roc: ", train_auc_score)
-        run["train/accuracy"].log(epoch_train_acc)
-        run["train/auc"].log(train_auc_score)
+        if run is not None:
+            run["train/accuracy"].log(epoch_train_acc)
+            run["train/auc"].log(train_auc_score)
         train_accs.append(epoch_train_acc)
         train_auc.append(train_auc_score)
 
@@ -136,18 +138,22 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
                     output = model(batch_x)
 
                 preds = output.detach().numpy()
+                val_batch_y_list += list(batch_y)
+                val_preds_list += list(preds)
                 preds[preds >= 0.5] = 1
                 preds[preds < 0.5] = 0
                 num_correct += np.sum(preds == np.array(batch_y))
-                val_batch_y_list += list(batch_y)
-                val_preds_list += list(preds)
+                
 
         epoch_val_acc = num_correct / val_ds.num_samples
         val_auc_score = sklearn.metrics.roc_auc_score(val_batch_y_list, val_preds_list)
         print("val acc: ", epoch_val_acc)
         print("val auc: ", val_auc_score)
-        run["validation/auc"].log(epoch_val_acc)
-        run["validation/accuracy"].log(epoch_val_acc)
+
+        if run is not None:
+            run["validation/auc"].log(val_auc_score)
+            run["validation/accuracy"].log(epoch_val_acc)
+
         val_accs.append(epoch_val_acc)
         val_auc.append(val_auc_score)
 
@@ -177,7 +183,8 @@ def split_subjects(subjects, n_folds=cfg['CROSS_VAL_FOLDS']):
 def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, locations_drop, run, data_dir="data"):
     """Leave One Subject Out Cross Validation Experiment"""
     
-    data_dict = prepare_data(subjects, data_dir, modalities, locations_drop, sample_rate, win_len)
+    # data_dict = prepare_data(subjects, data_dir, modalities, locations_drop, sample_rate, win_len)
+    data_dict = {}
     
     all_val_acc = []
     all_train_acc = []
@@ -222,7 +229,6 @@ def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, n
             all_val_acc.append(run_val_acc)
             all_train_auc.append(run_train_auc)
             all_val_auc.append(run_val_auc)
-            
         except Exception as e:
             print(e)
             all_train_acc.append(np.nan)
@@ -240,7 +246,7 @@ def main():
     # data downloaded from https://data.mendeley.com/datasets/r8gmbtv7w2/3 should be in this dir
     # ie there should be a 'data/Filtered Data' folder
     
-    train_acc, val_acc = train_loso(
+    train_acc, val_acc, train_auc, val_auc = train_loso(
         subjects=cfg['SUBJECTS'], 
         modalities=cfg['MODALITIES'], 
         sample_rate=cfg['SAMPLE_RATE'], 
@@ -249,10 +255,14 @@ def main():
         n_windows=cfg['N_WINDOWS'], 
         num_head=cfg['N_HEADS'], 
         num_ec_layers=cfg['N_ENC_LAYERS'], 
-        num_filters=cfg['N_MAX_CONV_FILTERS']
+        num_filters=cfg['N_MAX_CONV_FILTERS'],
+        locations_drop=[],
+        run=None
     )
     print("mean train acc: ", train_acc)
     print("mean val acc", val_acc)
+    print("mean train auc: ", train_acc)
+    print("mean val auc", val_acc)
 
 
 if __name__ == "__main__":
