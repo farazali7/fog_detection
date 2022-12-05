@@ -21,9 +21,12 @@ class CT_FOG(nn.Module):
         super(CT_FOG, self).__init__()
         # TODO: Either sequentially pass time step input or increase first dim size?
         self.conv_block = ConvolutionalBlock(in_channels, max_conv_filters)
+
+        # Transformer Block
         # self.transformer_enc = TransformerEncoder(seq_len=seq_len, embed_dim=32)
         # encoder_layer = nn.TransformerEncoderLayer(d_model=max_conv_filters//4, nhead=n_heads)
         # self.transformer_enc = nn.TransformerEncoder(encoder_layer, num_layers=n_enc_layers)
+
         self.global_avg_pool = nn.AvgPool1d(kernel_size=max_conv_filters//4)
 
         # MLP Head TODO: Maybe set different dropout rate here than rest of network

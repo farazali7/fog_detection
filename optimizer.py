@@ -11,51 +11,52 @@ def objective(trial):
     locations_drop = []
     #Data dependant 
     #number of modalities (5 different modalities)
-    # modalities_list = []
+    modalities_list = []
 
-    # if trial.suggest_int('EMG', 0, 1) == 1:
-    #     modalities_list.append("EMG")
+    if trial.suggest_int('EMG', 0, 1) == 1:
+        modalities_list.append("EMG")
     
-    # if trial.suggest_int('ECG', 0, 1) == 1:
-    #    modalities_list.append("ECG")
+    if trial.suggest_int('ECG', 0, 1) == 1:
+       modalities_list.append("ECG")
 
-    # acc = trial.suggest_int('ACC', 0, 1)
-    # if acc == 1:
-    #     modalities_list.append("ACC")
+    acc = trial.suggest_int('ACC', 0, 1)
+    if acc == 1:
+        modalities_list.append("ACC")
 
-    # gyr = trial.suggest_int('GYR', 0, 1)
-    # if gyr == 1:
-    #     modalities_list.append("GYR")
+    gyr = trial.suggest_int('GYR', 0, 1)
+    if gyr == 1:
+        modalities_list.append("GYR")
 
-    # if gyr == 1 or acc == 1:
-    #     rs = trial.suggest_int('RS', 0, 1)
-    #     ls = trial.suggest_int('LS', 0, 1)
-    #     w = trial.suggest_int('W', 0, 1)
-    #     a = trial.suggest_int('A', 0, 1)
+    if gyr == 1 or acc == 1:
+        rs = trial.suggest_int('RS', 0, 1)
+        ls = trial.suggest_int('LS', 0, 1)
+        w = trial.suggest_int('W', 0, 1)
+        a = trial.suggest_int('A', 0, 1)
 
-    #     locations_drop = []
-    #     if rs == 0:
-    #         locations_drop.append("RS-")
-    #     if ls == 0:
-    #         locations_drop.append("LS-")
-    #     if w == 0:
-    #         locations_drop.append("W-")
-    #     if a == 0:
-    #         locations_drop.append("A-")
+        locations_drop = []
+        if rs == 0:
+            locations_drop.append("RS-")
+        if ls == 0:
+            locations_drop.append("LS-")
+        if w == 0:
+            locations_drop.append("W-")
+        if a == 0:
+            locations_drop.append("A-")
 
-    # if trial.suggest_int('NC/SC', 0, 1) == 1:
-    #     modalities_list.append("NC/SC")
+    if trial.suggest_int('NC/SC', 0, 1) == 1:
+        modalities_list.append("NC/SC")
     
-    # cfg['MODALITIES'] = modalities_list
+    cfg['MODALITIES'] = modalities_list
 
     # #win.len (3.2, 6.4, 12.8)  - number of samples would be a power to 2
-    # window_len = trial.suggest_categorical('window_length', [6.4, 12.8])
-    # cfg['WIN_LENGTH'] = window_len
+    window_len = trial.suggest_categorical('window_length', [6.4, 12.8])
+    cfg['WIN_LENGTH'] = window_len
 
-    # #sample rate (Start with 40, but let try higher as well)
-    # cfg['SAMPLE_RATE'] = trial.suggest_int("Sample_Rate", 40, 200, step=20)
+    #sample rate (Start with 40, but let try higher as well)
+    cfg['SAMPLE_RATE'] = trial.suggest_int("Sample_Rate", 40, 200, step=20)
 
     # Data loading independant
+
     #Transformers only
     #number of heads **has to be even(2, 4, 8, 16)
     # heads_num_exp = trial.suggest_int('number of heads', 1, 4, step=1)

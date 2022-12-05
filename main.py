@@ -14,8 +14,12 @@ from random import sample
 import numpy as np
 import neptune.new as neptune
 import sklearn.metrics
+import pandas as pd
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
+RESULTS_DICT = {}
+RUN_COUNT = 0
 
 # run = neptune.init(
 #     project="SYDE599",
@@ -71,6 +75,9 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
     # for early stopping
     max_val_auc = 0
     epochs_without_improvement = 0
+
+    all_preds = []
+    all_y = []
     
     # train epochs
     for epoch in range(cfg['EPOCHS']):
@@ -114,9 +121,12 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
         
         print("train acc: ", epoch_train_acc)
         print("train roc: ", train_auc_score)
+
+        # Neptune Logging
         if run is not None:
             run["train/accuracy"].log(epoch_train_acc)
             run["train/auc"].log(train_auc_score)
+        
         train_accs.append(epoch_train_acc)
         train_auc.append(train_auc_score)
 
@@ -138,7 +148,7 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
                     output = model(batch_x)
 
                 preds = output.detach().numpy()
-                val_batch_y_list += list(batch_y)
+                val_batch_y_list += list(batch_y.detach().numpy())
                 val_preds_list += list(preds)
                 preds[preds >= 0.5] = 1
                 preds[preds < 0.5] = 0
@@ -147,6 +157,10 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
 
         epoch_val_acc = num_correct / val_ds.num_samples
         val_auc_score = sklearn.metrics.roc_auc_score(val_batch_y_list, val_preds_list)
+
+        # store validation predictions and labels
+        all_preds.append(val_preds_list)
+        all_y.append(val_batch_y_list)
         print("val acc: ", epoch_val_acc)
         print("val auc: ", val_auc_score)
 
@@ -170,6 +184,11 @@ def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
 
     # get best epoch with max val accuracy
     best_epoch = np.argmax(val_auc)
+
+    # Store results
+    RESULTS_DICT['run_{0}_y'.format(RUN_COUNT)] = all_y[best_epoch]
+    RESULTS_DICT['run_{0}_preds'.format(RUN_COUNT)] = all_preds[best_epoch]
+
     return train_accs[best_epoch], val_accs[best_epoch], train_auc[best_epoch], val_auc[best_epoch]
 
 
@@ -183,8 +202,7 @@ def split_subjects(subjects, n_folds=cfg['CROSS_VAL_FOLDS']):
 def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, num_head, num_ec_layers, num_filters, locations_drop, run, data_dir="data"):
     """Leave One Subject Out Cross Validation Experiment"""
     
-    # data_dict = prepare_data(subjects, data_dir, modalities, locations_drop, sample_rate, win_len)
-    data_dict = {}
+    data_dict = prepare_data(subjects, data_dir, modalities, locations_drop, sample_rate, win_len)
     
     all_val_acc = []
     all_train_acc = []
@@ -193,6 +211,9 @@ def train_loso(subjects, modalities, sample_rate, win_len, overlap, n_windows, n
     subject_folds = list(split_subjects(subjects))
 
     for i, val_subs in enumerate(subject_folds):
+        global RUN_COUNT
+        RUN_COUNT = i + 1
+
         # remianing subjects used for training
         train_subs = list(set(subjects) - set(val_subs))
 
@@ -259,10 +280,13 @@ def main():
         locations_drop=[],
         run=None
     )
+
+    df = pd.DataFrame(RESULTS_DICT)
+    df.to_csv('results.csv', index=False)
     print("mean train acc: ", train_acc)
     print("mean val acc", val_acc)
-    print("mean train auc: ", train_acc)
-    print("mean val auc", val_acc)
+    print("mean train auc: ", train_auc)
+    print("mean val auc", val_auc)
 
 
 if __name__ == "__main__":
