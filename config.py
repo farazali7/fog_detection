@@ -4,10 +4,10 @@ from torchvision import transforms
 cfg = {
     'EPOCHS': 50,
     'BATCH_SIZE': 32,
-    'N_WINDOWS': 4,
+    'N_WINDOWS': 3,
     'N_HEADS': 8,
     'N_ENC_LAYERS': 3,
-    'N_MAX_CONV_FILTERS': 150,
+    'N_MAX_CONV_FILTERS': 512,
     'WIN_LENGTH': 5.12,
     'OVERLAP': 0.75,
     'SAMPLE_RATE': 40,
@@ -34,12 +34,12 @@ cfg = {
         ],
     'LOSS': nn.BCELoss,
     'OPTIMIZER': 'adam',
-    'LR': 0.0005,
+    'LR': 0.0001156394379977959,
     'WEIGHT_DECAY': 0,
     'BETAS': [0.9, 0.999],
     'EPSILON': 1e-8,
-    'MOMENTUM': 0.1,
-    'DROPOUT': 0.2,
+    'MOMENTUM': 0.5,
+    'DROPOUT': 0.5,
     'EARLY_STOPPING': 7,
     'CROSS_VAL_FOLDS': 3
 }
