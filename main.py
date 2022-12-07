@@ -1,7 +1,7 @@
 # Training code goes here
 
 from data_loader import FOGDataset, prepare_data
-from models import CT_FOG
+from models import CNN_FOG
 import os
 import torch
 from torch.optim import Adam, SGD
@@ -39,7 +39,7 @@ def train_val_test_split(subjects, train=10, val=1, test=1):
 
 def run_training(train_ds, val_ds, num_head, num_ec_layers, num_filters, run):
     """Train CT FOG Model"""
-    model = CT_FOG(
+    model = CNN_FOG(
         in_channels=train_ds.num_channels, 
         seq_len=train_ds.n_windows, 
         n_heads=num_head, 

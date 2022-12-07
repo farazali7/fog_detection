@@ -8,8 +8,8 @@ import math
 from config import cfg
 
 
-# Convolutional Transformer for FOG Detection
-class CT_FOG(nn.Module):
+# Convolutional Neural Network + MLP for FOG Detection
+class CNN_FOG(nn.Module):
     def __init__(self, in_channels, seq_len, dropout_rate=cfg['DROPOUT'], n_heads=cfg['N_HEADS'],
                  n_enc_layers=cfg['N_ENC_LAYERS'], max_conv_filters=cfg['N_MAX_CONV_FILTERS']):
         '''
@@ -18,7 +18,7 @@ class CT_FOG(nn.Module):
         :param seq_len: Int, length of input sequence
         :param dropout_rate: Float, probability of neuron dropout for Dropout layers
         '''
-        super(CT_FOG, self).__init__()
+        super(CNN_FOG, self).__init__()
         # TODO: Either sequentially pass time step input or increase first dim size?
         self.conv_block = ConvolutionalBlock(in_channels, max_conv_filters)
 
